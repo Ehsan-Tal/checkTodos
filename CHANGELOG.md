@@ -1,0 +1,14 @@
+
+-[]     "todos" by date, proper daily task removal, etc.
+-[]     trap SIGINT > Ensure 1 creation
+-[]     ONLY 2 Creations > New and Completed
+-[]     ONLY 1 Move > Old to Backups/
+-[]     ONLY 1 GREP > Completed, etc., modify the result
+-[]     CHECK for empty GREP before replacing
+-[]     replace domain-todos with number, e.g., "# Games\n todos > # Games 0/10"
+-[]     add a todo menu for domains
+-[]     add options
+-[]     replace alias with checkTodos --quick
+-[]     replace the format of the backups and completed
+-[]     store directory information as .env
+-[]     write a environment_template.md with instructions to "save as" 
