@@ -1,12 +1,12 @@
 #!/bin/bash
 
 
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
+RED="\e[31m"
+YELLOW="\e[33m"
+NC="\e[0m"
 
-PASSSTR="✔️ "
-FAILSTR="❌"
+PASS="✔️ "
+FAIL="❌"
 
 function ask_consent() {
         # question is internal, response is external
@@ -29,9 +29,6 @@ function ask_consent() {
 #	1 Grep op
 
 
-#TODO: create directories
-
-#TODO: collect Todos from ls
 #TODO: sift _date from collected Todo
 #TODO: check if more than TODAY
 #TODO: cancel -[c]
@@ -54,10 +51,12 @@ BACKUPDIRECTORYFILEPATH="${ORIGINALDIRECTORYFILEPATH}/Backups"
 COMPLETEDDIRECTORYFILEPATH="${ORIGINALDIRECTORYFILEPATH}/Completed"
 
 
-# OLDTODONAME should be collected from an ls command
-NEWTODONAME="todos_${DATE}"
+# OLDTODOFILE should be collected from an ls command
+NEWTODOFILE="todos_${TODAY}"
 
-#TODOFILEPATH="${ORIGINALDIRECTORYFILEPATH}"
+NEWTODOFILEPATH="${ORIGINALDIRECTORYFILEPATH}/${NEWTODOFILE}"
+
+#TODOFILEPATH="${ORIGINALDIRECTORYFILEPATH}" created later ?
 #BACKUPFILEPATH="${BACKUPDIRECTORYFILEPATH}"
 #COMPLETEDFILEPATH="${COMPLETEDDIRECTORYFILEPATH}"
 
@@ -77,17 +76,19 @@ for (( i=0; i < "${#DIRECTORYFILEPATHArray[*]}"; i++ )); do
 	DIRECTORYFILEPATH="${DIRECTORYFILEPATHArray[${i}]}"
 
 	if [ -d "${DIRECTORYFILEPATH}" ]; then
-        	echo " --- success: ${DIRECTORYFILEPATH} does exist                        ${passStr}"
+		echo " --- success: $(basename ${DIRECTORYFILEPATH}) exists					${PASS}"
+	
 	else
-        	echo " --- error: ${DIRECTORYFILEPATH} does not exist                      ${failStr}"
+		echo " --- ERROR: $(basename ${DIRECTORYFILEPATH}) missing					${FAIL}"
         	ask_consent "Do you want to create ${DIRECTORYFILEPATH} ?"
-		if [ ${consent} = "Y"]; then
+	
+		if [ ${consent} = "Y" ]; then
 			echo " --- making directory"
 
 			#TODO: unhash when done
 			#mkdir ${DIRECTORYFILEPATH}
 		else
-			echo " - Exiting"
+			echo -e "\n - Exiting"
         		exit 0
 		fi
 
@@ -101,23 +102,37 @@ done
 unset DIRECTORYFILEPATHArray
 
 
-echo -e -e "${YELLOW} - NOTE:${NC} Todo is not implemented"
-echo " - Gathering Todo (T) input"
+echo -e "\n${YELLOW} - NOTE:${NC} Todo is not implemented"
+echo -e "\n - Gathering Todo (T) input"
 
 echo " -- find out T file..."
 
-echo " -- reading T file contents..."
-#mapfile -t CONTENTSArray < <(cat ${TODONAME})
+[ -s "${NEWTODOFILEPATH}" ] || touch ${NEWTODOFILEPATH}
+
+OLDTODOFILE="$(ls ${ORIGINALDIRECTORYFILEPATH} | grep -i "todos"* )"
+
+OLDTODOFILEPATH="${ORIGINALDIRECTORYFILEPATH}/${OLDTODOFILE}"
 
 echo " --- checking if T file exists..."
+
+echo " -- reading T file contents..."
+mapfile -t CONTENTSArray < <(cat ${OLDTODOFILEPATH})
+
+cat ${CONTENTSArray} | tail -5
 
 echo " --- checking if T data exists..."
 
 echo " ---- generating T file..."
 
+#touch ${}
+#echo "default" > ${NEWTODOFILE}
 
-echo -e -e "${YELLOW} - NOTE:${NC} Todos is not implemented"
-echo " - Processing Todo (T) data"
+echo " Done ?"
+read
+
+
+echo -e "\n${YELLOW} - NOTE:${NC} Todos is not implemented"
+echo -e "\n - Processing Todo (T) data"
 
 echo " -- destroying cancelled..."
 
@@ -126,16 +141,16 @@ echo " -- checking if ${DATE} < TODAY..."
 echo " --- extricating completed..."
 
 
-echo -e "${YELLOW} - NOTE:${NC} Backups is not implemented"
-echo " - Fiddling with Backups (B)"
+echo -e "\n${YELLOW} - NOTE:${NC} Backups is not implemented"
+echo -e "\n - Fiddling with Backups (B)"
 
 echo " -- checking if ${DATE} < TODAY..."
 
 echo " --- moving B file..."
 
 
-echo -e "${RED} - WARNING: ${NC} Domain Todos are not implemented"
-echo " - Gathering Domain Todos (D) input"
+echo -e "\n${RED} - WARNING: ${NC} Domain Todos are not implemented"
+echo -e "\n - Gathering Domain Todos (D) input"
 
 echo " -- reading D file contents"
 
@@ -146,8 +161,8 @@ echo " -- check against DOMAINS.md..."
 echo " --- generating D file..."
 
 
-echo -e "${RED} - WARNING: ${NC} Domain Todos are not implemented"
-echo " - Processing Domain Todos (D) data"
+echo -e "\n${RED} - WARNING: ${NC} Domain Todos are not implemented"
+echo -e "\n - Processing Domain Todos (D) data"
 
 echo " -- destroying cancelled..."
 
@@ -160,8 +175,8 @@ echo " -- counting lines..."
 echo " --- update heading with new count..."
 
 
-echo -e "${YELLOW} - NOTE:${NC} Completed is not implemented"
-echo " - Fiddling with Completed (C)"
+echo -e "\n${YELLOW} - NOTE:${NC} Completed is not implemented"
+echo -e "\n - Fiddling with Completed (C)"
 
 echo " -- checking if C data exists..."
 
