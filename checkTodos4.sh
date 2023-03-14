@@ -3,11 +3,15 @@
 
 RED="\e[31m"
 YELLOW="\e[33m"
+RED="\e[31m"
+GREEN="\e[32m"
+LIGHTGREEN="\e[92m"
+LIGHTRED="\e[91m"
 NC="\e[0m"
 
 PASS="✔️ "
 FAIL="❌"
-TABCHARACTERLIMIT="48"
+TABCHARACTERLIMIT="60"
 
 #TODO: figure out the character limit for tabs
 #TODO: figure out the tab:character ratio
@@ -26,6 +30,7 @@ function ask_consent() {
 
 }
 
+
 function exit_script {
 	echo -e "\nMirupafshim, ${USER}"
 	exit 0
@@ -36,53 +41,68 @@ function exit_script_with_message {
 	exit_script
 }
 
-function process_error {
-	message=" -- ERROR: ${1}"
+
+
+function print_status {
+	message="$1"
+	genre="$2"
 
 	if [ "${#message}" -le ${TABCHARACTERLIMIT} ]; then
-		echo "${message}"
+		echo -e "${message}"
 	else
-		echo " -- ERROR: ${#message} is too long, lol."
+		echo -e "a ${genre} is too long, lol. Message=${message}"
 	fi
 
-	unset message
+	return 0
 }
+
+
+function process_error {
+	message="${LIGHTRED} -- ERROR:${NC} ${1}"
+
+	print_status "${message}" "process_error"
+
+	unset message
+
+	return 0
+}
+
 
 function subprocess_error {
-	message=" --- ERROR: ${1}"
+	message="${RED} --- ERROR:${NC} ${1}"
 
-	if [ "${#message}" -le ${TABCHARACTERLIMIT} ]; then
-		echo "${message}"
-	else
-		echo " --- ERROR: ${#message} is too long, lol."
-	fi
+	print_status "${message}" "subprocess_error"
 
 	unset message
+
+	return 0
 }
+
 
 function process_success {
-	message=" -- success: ${1}"
+	message="${GREEN} -- success:${NC} ${1}"
 
-	if [ "${#message}" -le ${TABCHARACTERLIMIT} ]; then
-		echo "${message}"
-	else
-		echo " -- success: ${#message} is too long, lol."
-	fi
+	print_status "${message}" "process_success"
 
 	unset message
+
+	return 0
 }
+
 
 function subprocess_success {
-	message=" --- success: ${1}"
+	message="${LIGHTGREEN} --- success:${NC} ${1}"
 
-	if [ "${#message}" -le ${TABCHARACTERLIMIT} ]; then
-		echo "${message}"
-	else
-		echo " --- success: ${#message} is too long, lol."
-	fi
+	print_status "${message}" "subprocess_success"
 
 	unset message
+
+	return 0
 }
+
+
+
+
 
 
 # The new checkTodos !
@@ -166,6 +186,28 @@ done
 unset DIRECTORYFILEPATHArray
 
 
+
+# START OF:	ARRAY PACKAGING
+
+
+#TODO:	backup raw file
+
+#TODO:	Split input by major heading into packages
+#TODO:	Split rest of code into source files
+
+#TODO:	create clean algorithmic process from source files
+#TODO:	process every package
+#TODO:	re-combine the packages
+#TODO:	save completed with their respective headings
+
+
+# END OF:	ARRAY PACKAGING
+
+echo -e "\n - Backing up Todo file"
+echo -e "${YELLOW} - NOTE:${NC} Todo is not implemented"
+
+
+
 echo -e "\n - Gathering Todo (T) input"
 echo -e "${YELLOW} - NOTE:${NC} Todo is not implemented"
 
@@ -182,9 +224,17 @@ while [ 1 ]; do
 	echo " --- checking if T file exists..."
 	if [ -n "${OLDTODOFILE}" ]; then
 		echo " --- reading T file contents..."
-		mapfile -t CONTENTSArray < <(cat ${OLDTODOFILEPATH})
 
-		echo ${CONTENTSArray}
+		i=0
+		while IFS= read -r line; do
+			
+			CONTENTSArray[${i}]="${line}"
+			i=$(( i + 1 ))
+
+		done < ${OLDTODOFILEPATH}
+		
+		unset i
+
 
 		echo " --- checking if T data exists..."
 		if [ -n "${CONTENTSArray}" ]; then
@@ -220,7 +270,51 @@ done
 echo -e "\n - Processing Todo (T) data"
 echo -e "${YELLOW} - NOTE:${NC} Todos is not implemented"
 
+#for i in "${CONTENTSArray[@]}"; do
+#	echo $i
+#done
+
+
+
+#	START OF: -[c] destruction
 echo " -- destroying cancelled..."
+value="-[c]"
+
+while [ 1 ]; do
+
+	changes=false
+
+	for index in "${!CONTENTSArray[@]}"; do
+		contentString="${CONTENTSArray[$index]}"
+
+		if [[ "${contentString:0:${#value}}" = "${value}" ]]; then
+			CONTENTSArray=( "${CONTENTSArray[@]:0:${index}}"	 "${CONTENTSArray[@]:$((index + 1))}" )	
+			echo " --- excluding: ${contentString}"
+			changes=true
+		fi
+	done
+	# end of for loop
+
+	if [[ "${changes}" = false ]]; then
+		process_success "Clean of Cancels"
+		break
+	fi
+
+#	for ((i=0; i<9; i++)); do
+#		echo "${CONTENTSArray[${i}]}"
+#	done
+#	read
+
+done
+# end of while loop
+
+
+unset value
+unset contentsSTRING
+
+#	END OF: -[c] destruction
+
+
 
 echo " -- checking if ${DATE} < TODAY..."
 
@@ -273,7 +367,10 @@ echo " --- appending C data..."
 
 
 
+echo -e "\n - Bluetooth"
+echo -e "${RED} - WARNING: ${NC} not implemented"
 
+#CONTENTSArray=( "${bluetoothArray[@]}" "${CONTENTSArray[@]}" )
 
 
 
