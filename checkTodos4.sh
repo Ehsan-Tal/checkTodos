@@ -45,63 +45,92 @@ function exit_script_with_message {
 
 function print_status {
 	message="$1"
-	genre="$2"
 
 	if [ "${#message}" -le ${TABCHARACTERLIMIT} ]; then
 		echo -e "${message}"
 	else
-		echo -e "a ${genre} is too long, lol. Message=${message}"
+		echo -e "too long, lol. Message=${message}"
 	fi
 
 	return 0
 }
 
 
-function process_error {
-	message="${LIGHTRED} -- ERROR:${NC} ${1}"
-
-	print_status "${message}" "process_error"
-
-	unset message
-
-	return 0
-}
-
-
-function subprocess_error {
-	message="${RED} --- ERROR:${NC} ${1}"
-
-	print_status "${message}" "subprocess_error"
-
-	unset message
-
-	return 0
-}
-
-
 function process_success {
-	message="${GREEN} -- success:${NC} ${1}"
+	bulletStage="${2}"
+	genre="success:"	
+	tempString=$(printf "%${bulletStage}s")
+	bullets=${tempString// /-} 
+	
+	if [ "${2}" -eq "1" ]; then
+		PRIMARY="${GREEN}"
+	else
+		PRIMARY="${LIGHTGREEN}"
+	fi
 
-	print_status "${message}" "process_success"
+	message="${PRIMARY} ${bullets} ${genre}${NC} ${1}"
+
+	print_status "${message}"
 
 	unset message
+	unset PRIMARY
+	unset bulletStage
+	unset genre
+	unset tempString
+	unset bullets
 
 	return 0
+
 }
 
 
-function subprocess_success {
-	message="${LIGHTGREEN} --- success:${NC} ${1}"
+function process_error {
+	bulletStage="${2}"
+	genre="error:"	
+	tempString=$(printf "%${bulletStage}s")
+	bullets=${tempString// /-} 
 
-	print_status "${message}" "subprocess_success"
+	if [ "${2}" -eq "1" ]; then
+		PRIMARY="${RED}"
+	else
+		PRIMARY="${LIGHTRED}"
+	fi
+
+	message="${PRIMARY} ${bullets} ${genre}${NC} ${1}"
+
+	print_status "${message}"
 
 	unset message
+	unset PRIMARY
+	unset bulletStage
+	unset genre
+	unset tempString
+	unset bullets
 
 	return 0
+
 }
 
 
+function process {
+	bulletStage="${2}"
+	tempString=$(printf "%${bulletStage}s")
+	bullets=${tempString// /-} 
 
+	if [ "${2}" -eq "1" ]; then
+		echo -e "\n ${bullets} ${1}"
+	else
+		echo -e " ${bullets} ${1}"
+	fi
+
+
+	unset message
+	unset tempString
+	unset bullets
+	unset bulletStage
+
+	return 0
+}
 
 
 
@@ -115,16 +144,16 @@ function subprocess_success {
 
 #TODO: sift _date from collected Todo
 #TODO: check if more than TODAY
-#TODO: cancel -[c]
 #TODO: find if T_date matches B_date
 #TODO: find if T_date matches C_date
-#TODO: append -[x] to C
 #TODO: form a template_todo
 #TODO: add options support
 
 #TODO: form a DOMAINS.md
 #TODO: how updating headings ?
 #TODO: how counting todos ?
+
+
 
 
 TODAY=$(date "+%Y-%m-%d")
@@ -144,11 +173,15 @@ NEWTODOFILEPATH="${ORIGINALDIRECTORYFILEPATH}/${NEWTODOFILE}"
 #BACKUPFILEPATH="${BACKUPDIRECTORYFILEPATH}"
 #COMPLETEDFILEPATH="${COMPLETEDDIRECTORYFILEPATH}"
 
-declare -a COMPLETEDTODOSArray
-#CONTENTSArray made later
+#COMPLETEDARRAY		made later
+#CONTENTSARRAY		made later
 
 
-echo " -- checking presence of the directories..."
+
+
+process "Ensuring directories" "1"
+
+process "checking presence of the directories..." "2"
 
 DIRECTORYFILEPATHArray=(
 	"${ORIGINALDIRECTORYFILEPATH}"
@@ -160,19 +193,19 @@ for (( i=0; i < "${#DIRECTORYFILEPATHArray[*]}"; i++ )); do
 	DIRECTORYFILEPATH="${DIRECTORYFILEPATHArray[${i}]}"
 
 	if [ -d "${DIRECTORYFILEPATH}" ]; then
-		subprocess_success "$(basename ${DIRECTORYFILEPATH}) exists					${PASS}"
+		process_success "$(basename ${DIRECTORYFILEPATH}) exists					${PASS}" "2"
 	
 	else
-		subprocess_success "$(basename ${DIRECTORYFILEPATH}) missing					${FAIL}"
+		process_success "$(basename ${DIRECTORYFILEPATH}) missing					${FAIL}" "2"
         	ask_consent "Do you want to create ${DIRECTORYFILEPATH} ?"
 	
 		if [ ${consent} = "Y" ]; then
-			echo " --- making directory"
+			process_success "making directory" "3"
 
 			#TODO: unhash when done
 			#mkdir ${DIRECTORYFILEPATH}
 		else
-			echo -e "CONSENT NEGATIVE"
+			process_error "CONSENT NEGATIVE" "3"
         		exit_script
 		fi
 
@@ -184,6 +217,8 @@ for (( i=0; i < "${#DIRECTORYFILEPATHArray[*]}"; i++ )); do
 done
 
 unset DIRECTORYFILEPATHArray
+
+process_success "Directories Exist" "1"
 
 
 
@@ -203,13 +238,36 @@ unset DIRECTORYFILEPATHArray
 
 # END OF:	ARRAY PACKAGING
 
-echo -e "\n - Backing up Todo file"
+
+
+
+#	START OF: "Fiddling with Backups (B)"
+
+process "Fiddling with Backups (B)" "1"
+echo -e "${YELLOW} - NOTE:${NC} Backups is not implemented"
+
+
+process "checking if ${DATE} < TODAY..." "2"
+
+if [ ! true ]; then
+	process "moving B file..." "3"
+	# mv OLDTODOFILE ${BACKUPDIRECTORYFILEPATH}
+	#TODO: unhash when done
+fi
+
+
+process_success "Fiddling with Backups (B)" "1"
+
+#	END OF: "Fiddling with Backups (B)"
+
+
+
+
+#	START OF: Gathering Todo (T) input
+
+process "Gathering Todo (T) input" "1"
 echo -e "${YELLOW} - NOTE:${NC} Todo is not implemented"
 
-
-
-echo -e "\n - Gathering Todo (T) input"
-echo -e "${YELLOW} - NOTE:${NC} Todo is not implemented"
 
 while [ 1 ]; do
 
@@ -221,14 +279,17 @@ while [ 1 ]; do
 	#TODO fix the grep to be specific to the todo file within
 	OLDTODOFILEPATH="${ORIGINALDIRECTORYFILEPATH}/${OLDTODOFILE}"
 
-	echo " --- checking if T file exists..."
+
+	process "checking if T file exists..." "2"
+
 	if [ -n "${OLDTODOFILE}" ]; then
-		echo " --- reading T file contents..."
+
+		process "reading T file contents..." "3"
 
 		i=0
 		while IFS= read -r line; do
 			
-			CONTENTSArray[${i}]="${line}"
+			CONTENTSARRAY[${i}]="${line}"
 			i=$(( i + 1 ))
 
 		done < ${OLDTODOFILEPATH}
@@ -236,26 +297,43 @@ while [ 1 ]; do
 		unset i
 
 
-		echo " --- checking if T data exists..."
-		if [ -n "${CONTENTSArray}" ]; then
-			subprocess_success "${OLDTODOFILE} has data					${PASS}"
+		process "checking if T data exists..." "3"
+
+		if [ -n "${CONTENTSARRAY}" ]; then
+			process_success "${OLDTODOFILE} has data					${PASS}" "2"
 			break
 	
 		else 
-			subprocess_error "${OLDTODOFILE:-'missing file'} is empty !					${FAIL}"
+			process_error "${OLDTODOFILE:-'missing file'} is empty !					${FAIL}" "2"
 			exit_script
 		fi
 
 	else
-		process_error "${OLDTODOFILE:-The todo file} is absent !				${FAIL}"
-		echo " -- generating T file..."
+		process_error "${OLDTODOFILE:-The todo file} is absent !				${FAIL}" "2"
+		
+
+
+		ask_consent "Do you want to recover from the most recent backup ?"
+		
+		if [ "${consent}"  = "Y" ]; then
+			process "recovering from last backup..." 2
+		else
+			process_error "decided not to recover" 2
+		fi
+		
+		unset consent
+
+
+
+
 		ask_consent "Do you want to generate a new one ?"
 
 		if [ "${consent}" = "Y" ]; then
+			process "generating T file..." "2"
+			
 			generate_default_todo "${NEWTODOFILE}" || exit_script_with_message "ERROR: generate default todo function not sourced !"
 		else
 			exit_script_with_message "decided not to generate todo file"
-
 		fi
 
 		unset consent
@@ -265,43 +343,44 @@ while [ 1 ]; do
 done
 # END OF T INPUT WHILE LOOP
 
+process_success "Gathering Todo (T) input" "1"
+#	END OF: Gathering Todo (T) input
 
 
-echo -e "\n - Processing Todo (T) data"
-echo -e "${YELLOW} - NOTE:${NC} Todos is not implemented"
 
-#for i in "${CONTENTSArray[@]}"; do
-#	echo $i
-#done
 
+#	START OF:  Processing Todo (T) data
+process "Processing Todo (T) data" "1"
+echo -e "${YELLOW} - NOTE:${NC} not all items are implemented"
 
 
 #	START OF: -[c] destruction
-echo " -- destroying cancelled..."
+process "destroying cancelled..." 2
 value="-[c]"
+
 
 while [ 1 ]; do
 
 	changes=false
 
-	for index in "${!CONTENTSArray[@]}"; do
-		contentString="${CONTENTSArray[$index]}"
+	for index in "${!CONTENTSARRAY[@]}"; do
+		contentString="${CONTENTSARRAY[$index]}"
 
 		if [[ "${contentString:0:${#value}}" = "${value}" ]]; then
-			CONTENTSArray=( "${CONTENTSArray[@]:0:${index}}"	 "${CONTENTSArray[@]:$((index + 1))}" )	
-			echo " --- excluding: ${contentString}"
+			CONTENTSARRAY=( "${CONTENTSARRAY[@]:0:${index}}"	 "${CONTENTSARRAY[@]:$((index + 1))}" )	
+#			process "excluding: ${contentString}" 3
 			changes=true
 		fi
 	done
 	# end of for loop
 
 	if [[ "${changes}" = false ]]; then
-		process_success "Clean of Cancels"
+		process_success "Clean of Cancels" 2
 		break
 	fi
 
 #	for ((i=0; i<9; i++)); do
-#		echo "${CONTENTSArray[${i}]}"
+#		echo "${CONTENTSARRAY[${i}]}"
 #	done
 #	read
 
@@ -309,69 +388,129 @@ done
 # end of while loop
 
 
+unset changes
 unset value
-unset contentsSTRING
+unset contentSTRING
 
 #	END OF: -[c] destruction
 
 
 
-echo " -- checking if ${DATE} < TODAY..."
 
-echo " --- extricating completed..."
+#	START OF: date checking
+
+process "checking if ${DATE} < TODAY..." 2
+
+#	TODO: take date from todo
+#	TODO: check against it
+
+makeCompleted=false
+
+if [[ "${makeCompleted}" = true ]]; then
+
+#	START OF: -[x] extrication
+	process "extricating completed..." 3
+
+	value="-[x]"
+	declare -a COMPLETEDARRAY
+	COMPLETEDARRAY+=("${CONTENTSARRAY[0]}")
 
 
-echo -e "\n - Fiddling with Backups (B)"
-echo -e "${YELLOW} - NOTE:${NC} Backups is not implemented"
+	while [ 1 ]; do
 
-echo " -- checking if ${DATE} < TODAY..."
+		changes=false
 
-echo " --- moving B file..."
+		for index in "${!CONTENTSARRAY[@]}"; do
+			contentString="${CONTENTSARRAY[$index]}"
+
+			if [[ "${contentString:0:${#value}}" = "${value}" ]]; then
+				CONTENTSARRAY=( "${CONTENTSARRAY[@]:0:${index}}"	 "${CONTENTSARRAY[@]:$((index + 1))}" )	
+#				echo " ---- extricating: ${contentString}"
+				COMPLETEDARRAY+=("${contentString}")
+				changes=true
+			fi
+		done
+		# end of for loop
+
+		if [[ "${changes}" = false ]]; then
+			process_success "X's Extricated" 2
+			break
+		fi
+
+	done
 
 
-echo -e "\n - Gathering Domain Todos (D) input"
+	unset changes
+	unset value
+	unset contentSTRING
+	unset COMPLETEDARRAY
+#	END OF: -[x] extrication
+fi
+
+unset makeCompleted
+
+process_success "Processed Todo (T) data" 1
+
+#	END OF: date checking
+
+
+if [ ! true ]; then
+
+#	START OF: Gathering Domain Todos (D) input
+
+process "Gathering Domain Todos (D) input" 1
 echo -e "${RED} - WARNING: ${NC} Domain Todos are not implemented"
 
-echo " -- reading D file contents"
+process "reading D file contents" 2
 
-echo " --- checking if D data exists..."
+process "checking if D data exists..." 3
 
-echo " -- check against DOMAINS.md..."
+process "check against DOMAINS.md..." 2
 
-echo " --- generating D file..."
+process "generating D file..." 3
+
+process_success "Gathering Domain Todos (D) input" 1
+
+#	END OF: Gathering Domain Todos (D) input
 
 
-echo -e "\n - Processing Domain Todos (D) data"
+
+
+#	START OF: Processing Domain Todos (D) data
+
+process "Processing Domain Todos (D) data" 1
 echo -e "${RED} - WARNING: ${NC} Domain Todos are not implemented"
 
-echo " -- destroying cancelled..."
+process "destroying cancelled..." 2
 
-echo " -- checking if ${DATE} < TODAY..."
+process "checking if ${DATE} < TODAY..." 2
 
-echo " --- cutting completed..."
+process "cutting completed..." 3
 
-echo " -- counting lines..."
+process "counting lines..." 2
 
-echo " --- update heading with new count..."
+process "update heading with new count..." 3
 
+process_success "Processed Todo (T) data" 1
 
-echo -e "\n - Fiddling with Completed (C)"
-echo -e "${YELLOW} - NOTE:${NC} Completed is not implemented"
-
-echo " -- checking if C data exists..."
-
-echo " --- generating C file..."
-
-echo " --- appending C data..."
+#	END OF: Processing Domain Todos (D) data
 
 
 
 
-echo -e "\n - Bluetooth"
-echo -e "${RED} - WARNING: ${NC} not implemented"
+#	START OF: Bluetooth Process
 
-#CONTENTSArray=( "${bluetoothArray[@]}" "${CONTENTSArray[@]}" )
+process "Bluetooth Process" 1
+echo -e "${RED} - WARNING: ${NC} Bluetooth Process not implemented"
 
+#CONTENTSARRAY=( "${bluetoothArray[@]}" "${CONTENTSARRAY[@]}" )
+
+
+process_success "Bluetooth Process" 1
+
+#	END OF: Bluetooth Process
+
+fi
 
 
 
